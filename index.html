@@ -1,0 +1,980 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abel Quiz App</title>
+
+<style>
+:root {
+    --background: linear-gradient(135deg, #667eea, #764ba2);
+    --card: white;
+    --text: #222;
+    --button: #667eea;
+    --border: #ddd;
+}
+
+body.dark-mode {
+    --background: #121212;
+    --card: #1e1e1e;
+    --text: white;
+    --button: #805ad5;
+    --border: #444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+}
+
+button {
+    background: var(--button);
+    color: white;
+    border: none;
+    padding: 11px 16px;
+    margin: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-width: 100%;
+}
+
+#quiz-container,
+.result-card {
+    background: var(--card);
+    color: var(--text);
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 22px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+
+.difficulty-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.difficulty-buttons button.selected {
+    outline: 3px solid #22c55e;
+    outline-offset: 2px;
+}
+
+#question {
+    font-size: 21px;
+    margin: 20px 0;
+}
+
+.option-button {
+    display: block;
+    width: 100%;
+    background: var(--button);
+    margin: 10px 0;
+}
+
+#progress-container {
+    background: var(--border);
+    height: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+#progress-bar {
+    background: #22c55e;
+    width: 0%;
+    height: 100%;
+    transition: width 0.3s;
+}
+
+#timer {
+    font-weight: bold;
+    font-size: 18px;
+    color: #e53e3e;
+}
+
+.correct {
+    color: #16a34a;
+}
+
+.wrong {
+    color: #ef4444;
+}
+
+.result-card {
+    text-align: left;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* PROGRESS SUMMARY */
+
+.summary-bar {
+    display: flex;
+    width: 100%;
+    height: 18px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.summary-correct {
+    background: #22c55e;
+}
+
+.summary-wrong {
+    background: #ef4444;
+}
+
+.summary-unanswered {
+    background: #f59e0b;
+}
+
+.summary-labels {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.label-correct {
+    color: #16a34a;
+}
+
+.label-wrong {
+    color: #ef4444;
+}
+
+.label-unanswered {
+    color: #d97706;
+}
+
+/* CERTIFICATE */
+
+.certificate {
+    background: #fffdf2;
+    color: #222;
+    border: 5px double #d4a017;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 25px 0;
+    text-align: center;
+}
+
+.certificate h2 {
+    color: #b8860b;
+    font-size: 28px;
+}
+
+.certificate p {
+    font-size: 17px;
+    margin: 12px;
+}
+
+.certificate-name {
+    font-size: 25px;
+    font-weight: bold;
+    color: #5b21b6;
+}
+
+.certificate-date {
+    font-size: 14px;
+    color: #555;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    #quiz-container,
+    .result-card {
+        padding: 15px;
+    }
+
+    #question {
+        font-size: 18px;
+    }
+
+    .certificate {
+        padding: 15px;
+    }
+
+    .certificate h2 {
+        font-size: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Abel Quiz App</h1>
+
+<button id="themeButton" onclick="toggleTheme()">
+    🌙 Dark Mode
+</button>
+
+<div id="quiz-container">
+
+    <h2>Welcome to Abel Quiz!</h2>
+
+    <p id="student-area">
+        <label for="studentName">Student Name:</label>
+        <input
+            id="studentName"
+            type="text"
+            placeholder="Enter your name"
+        >
+    </p>
+
+    <h3>Select Difficulty</h3>
+
+    <div class="difficulty-buttons">
+        <button
+            onclick="selectDifficulty('Easy', this)"
+            class="selected"
+        >Easy</button>
+
+        <button
+            onclick="selectDifficulty('Medium', this)"
+        >Medium</button>
+
+        <button
+            onclick="selectDifficulty('Hard', this)"
+        >Hard</button>
+    </div>
+
+    <p id="difficulty-message">Selected: Easy</p>
+
+    <button id="startButton" onclick="startQuiz()">
+        Start Quiz
+    </button>
+
+    <div id="quiz-area" class="hidden">
+
+        <p id="question-number"></p>
+
+        <p id="timer">Time: 15 seconds</p>
+
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <h3 id="question"></h3>
+
+        <div id="options"></div>
+
+        <p id="result"></p>
+
+        <button
+            id="nextButton"
+            class="hidden"
+            onclick="nextQuestion()"
+        >
+            Next Question
+        </button>
+
+    </div>
+</div>
+
+<div id="final-result" class="result-card hidden"></div>
+
+<script>
+
+/* DIFFICULTY SELECTION */
+
+/** @type {"Easy" | "Medium" | "Hard"} */
+let selectedDifficulty = "Easy";
+
+/**
+ * @param {"Easy" | "Medium" | "Hard"} level
+ * @param {HTMLButtonElement} button
+ */
+function selectDifficulty(level, button) {
+    selectedDifficulty = level;
+
+    document.querySelectorAll(".difficulty-buttons button")
+        .forEach(btn => btn.classList.remove("selected"));
+
+    button.classList.add("selected");
+
+    document.getElementById("difficulty-message").textContent =
+        "Selected: " + level;
+}
+
+/* QUIZ QUESTIONS */
+
+const originalQuestions = [
+
+    /* EASY QUESTIONS */
+
+    {
+        question: "What does HTML stand for?",
+        options: [
+            "Hyper Text Markup Language",
+            "High Text Machine Language",
+            "Hyper Tool Multi Language",
+            "Home Text Markup Language"
+        ],
+        difficulty: "Easy",
+        answer: "Hyper Text Markup Language"
+    },
+    {
+        question: "Which language is used to style a website?",
+        options: ["HTML", "CSS", "Python", "Java"],
+        difficulty: "Easy",
+        answer: "CSS"
+    },
+    {
+        question: "Which language makes websites interactive?",
+        options: ["CSS", "HTML", "JavaScript", "SQL"],
+        difficulty: "Easy",
+        answer: "JavaScript"
+    },
+    {
+        question: "Which HTML tag creates a paragraph?",
+        options: ["<h1>", "<p>", "<div>", "<img>"],
+        difficulty: "Easy",
+        answer: "<p>"
+    },
+    {
+        question: "Which symbol is used for a JavaScript comment on one line?",
+        options: ["<!-- -->", "**", "//", "##"],
+        difficulty: "Easy",
+        answer: "//"
+    },
+
+    /* MEDIUM QUESTIONS */
+
+    {
+        question: "Which HTML tag creates a hyperlink?",
+        options: ["<a>", "<p>", "<h1>", "<img>"],
+        difficulty: "Medium",
+        answer: "<a>"
+    },
+    {
+        question: "Which HTML tag displays an image?",
+        options: ["<image>", "<img>", "<picture-text>", "<src>"],
+        difficulty: "Medium",
+        answer: "<img>"
+    },
+    {
+        question: "Which CSS property changes text color?",
+        options: ["background", "font-size", "color", "border"],
+        difficulty: "Medium",
+        answer: "color"
+    },
+    {
+        question: "Which CSS property changes the background color?",
+        options: ["text-color", "background-color", "font-style", "margin"],
+        difficulty: "Medium",
+        answer: "background-color"
+    },
+    {
+        question: "Which CSS symbol selects a class?",
+        options: ["#", ".", "*", "&"],
+        difficulty: "Medium",
+        answer: "."
+    },
+
+    /* HARD QUESTIONS */
+
+    {
+        question: "Which JavaScript keyword declares a variable?",
+        options: ["style", "html", "let", "body"],
+        difficulty: "Hard",
+        answer: "let"
+    },
+    {
+        question: "Which JavaScript command displays a message in the console?",
+        options: ["console.log()", "document.style()", "html.print()", "show.css()"],
+        difficulty: "Hard",
+        answer: "console.log()"
+    },
+    {
+        question: "Which JavaScript operator checks strict equality?",
+        options: ["=", "==", "===", "!="],
+        difficulty: "Hard",
+        answer: "==="
+    },
+    {
+        question: "Which HTML tag creates an unordered list?",
+        options: ["<ol>", "<ul>", "<li>", "<list>"],
+        difficulty: "Hard",
+        answer: "<ul>"
+    },
+    {
+        question: "Which CSS layout system is useful for arranging items in rows or columns?",
+        options: ["Flexbox", "console.log()", "HTML", "JavaScript"],
+        difficulty: "Hard",
+        answer: "Flexbox"
+    }
+];
+
+/* VARIABLES */
+
+let questions = [];
+let currentQuestion = 0;
+let score = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let unansweredCount = 0;
+
+let timer;
+let timeLeft = 15;
+let answerHistory = [];
+let answered = false;
+
+/* SHUFFLE FUNCTION */
+
+/**
+ * @param {any[]} array
+ * @returns {any[]}
+ */
+function shuffle(array) {
+    const newArray = [...array];
+
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [newArray[i], newArray[j]] =
+            [newArray[j], newArray[i]];
+    }
+
+    return newArray;
+}
+
+/* START QUIZ */
+
+function startQuiz() {
+    const name =
+        document.getElementById("studentName").value.trim();
+
+    if (!name) {
+        alert("Please enter your name first.");
+        return;
+    }
+
+    const selectedQuestions = originalQuestions.filter(
+        q => q.difficulty === selectedDifficulty
+    );
+
+    if (selectedQuestions.length === 0) {
+        alert("No questions available for this difficulty.");
+        return;
+    }
+
+    questions = shuffle(
+        selectedQuestions.map(q => ({
+            ...q,
+            options: shuffle(q.options)
+        }))
+    );
+
+    currentQuestion = 0;
+    score = 0;
+    correctCount = 0;
+    wrongCount = 0;
+    unansweredCount = 0;
+    answerHistory = [];
+
+    document.getElementById("quiz-area")
+        .classList.remove("hidden");
+
+    document.getElementById("final-result")
+        .classList.add("hidden");
+
+    document.getElementById("startButton")
+        .classList.add("hidden");
+
+    document.getElementById("student-area")
+        .classList.add("hidden");
+
+    document.querySelector(".difficulty-buttons")
+        .classList.add("hidden");
+
+    document.getElementById("difficulty-message")
+        .classList.add("hidden");
+
+    showQuestion();
+}
+
+/* SHOW QUESTION */
+
+function showQuestion() {
+    clearInterval(timer);
+
+    answered = false;
+    timeLeft = 15;
+
+    const q = questions[currentQuestion];
+
+    document.getElementById("question-number").textContent =
+        "Question " + (currentQuestion + 1) +
+        " of " + questions.length +
+        " | " + selectedDifficulty;
+
+    document.getElementById("question").textContent =
+        q.question;
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("result").className = "";
+
+    document.getElementById("nextButton")
+        .classList.add("hidden");
+
+    document.getElementById("timer").textContent =
+        "Time: 15 seconds";
+
+    document.getElementById("progress-bar").style.width =
+        (currentQuestion / questions.length * 100) + "%";
+
+    const optionsArea =
+        document.getElementById("options");
+
+    optionsArea.innerHTML = "";
+
+    for (const option of q.options) {
+        const button = document.createElement("button");
+
+        button.textContent = option;
+        button.className = "option-button";
+
+        button.onclick = function () {
+            checkAnswer(option);
+        };
+
+        optionsArea.appendChild(button);
+    }
+
+    timer = setInterval(function () {
+        timeLeft--;
+
+        document.getElementById("timer").textContent =
+            "Time: " + timeLeft + " seconds";
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            unansweredCount++;
+            answered = true;
+
+            answerHistory.push({
+                question: q.question,
+                selected: "No answer",
+                correct: q.answer,
+                status: "Unanswered"
+            });
+
+            document.getElementById("result").textContent =
+                "Time is up! Correct answer: " + q.answer;
+
+            disableOptions();
+
+            document.getElementById("nextButton")
+                .classList.remove("hidden");
+        }
+    }, 1000);
+}
+
+/* CHECK ANSWER */
+
+/** @param {string} selected */
+function checkAnswer(selected) {
+    if (answered) return;
+
+    clearInterval(timer);
+    answered = true;
+
+    const q = questions[currentQuestion];
+
+    const result =
+        document.getElementById("result");
+
+    if (selected === q.answer) {
+        score++;
+        correctCount++;
+
+        result.textContent = "Correct! Well done!";
+        result.className = "correct";
+
+        answerHistory.push({
+            question: q.question,
+            selected: selected,
+            correct: q.answer,
+            status: "Correct"
+        });
+
+    } else {
+        wrongCount++;
+
+        result.textContent =
+            "Wrong! Correct answer: " + q.answer;
+
+        result.className = "wrong";
+
+        answerHistory.push({
+            question: q.question,
+            selected: selected,
+            correct: q.answer,
+            status: "Wrong"
+        });
+    }
+
+    disableOptions();
+
+    document.getElementById("nextButton")
+        .classList.remove("hidden");
+}
+
+/* DISABLE OPTIONS */
+
+function disableOptions() {
+    document.querySelectorAll(".option-button")
+        .forEach(button => {
+            button.disabled = true;
+        });
+}
+
+/* NEXT QUESTION */
+
+function nextQuestion() {
+    currentQuestion++;
+
+    if (currentQuestion < questions.length) {
+        showQuestion();
+    } else {
+        finishQuiz();
+    }
+}
+
+/* FINISH QUIZ */
+
+function finishQuiz() {
+    clearInterval(timer);
+
+    document.getElementById("progress-bar")
+        .style.width = "100%";
+
+    document.getElementById("quiz-area")
+        .classList.add("hidden");
+
+    const percentage = Math.round(
+        (score / questions.length) * 100
+    );
+
+    let grade;
+
+    if (percentage >= 90) {
+        grade = "A";
+    } else if (percentage >= 80) {
+        grade = "B";
+    } else if (percentage >= 70) {
+        grade = "C";
+    } else if (percentage >= 60) {
+        grade = "D";
+    } else {
+        grade = "F";
+    }
+
+    const pass =
+        percentage >= 60 ? "PASS" : "FAIL";
+
+    let performanceMessage = "";
+
+    if (percentage >= 90) {
+        performanceMessage =
+            "Excellent! Outstanding performance! 🏆";
+    } else if (percentage >= 70) {
+        performanceMessage =
+            "Great job! Keep improving! 🌟";
+    } else if (percentage >= 60) {
+        performanceMessage =
+            "Good effort! Keep practising! 👍";
+    } else {
+        performanceMessage =
+            "Don't give up! Study and try again! 💪";
+    }
+
+    const name =
+        document.getElementById("studentName").value.trim();
+
+    const completionDate =
+        new Date().toLocaleDateString();
+
+    saveBestScore(name, percentage);
+
+    const certificateHTML = `
+        <div class="certificate">
+            <h2>🏆 Certificate of Achievement</h2>
+            <p>This certificate is proudly presented to</p>
+            <p class="certificate-name">${escapeHTML(name)}</p>
+            <p>For successfully completing the Abel Quiz App.</p>
+            <p><strong>Difficulty:</strong> ${selectedDifficulty}</p>
+            <p><strong>Score:</strong> ${score}/${questions.length}</p>
+            <p><strong>Percentage:</strong> ${percentage}%</p>
+            <p><strong>Grade:</strong> ${grade}</p>
+            <p><strong>Result:</strong> ${pass}</p>
+            <p class="certificate-date">Date: ${completionDate}</p>
+        </div>
+    `;
+
+    let reviewHTML = "<h3>Answer Review</h3>";
+
+    answerHistory.forEach((item, index) => {
+        reviewHTML += `
+            <p><strong>${index + 1}. ${escapeHTML(item.question)}</strong></p>
+            <p>Your answer: ${escapeHTML(item.selected)}</p>
+            <p>Correct answer: ${escapeHTML(item.correct)}</p>
+            <p>Status: ${item.status}</p>
+            <hr>
+        `;
+    });
+
+    const finalResult =
+        document.getElementById("final-result");
+
+    finalResult.classList.remove("hidden");
+
+    finalResult.innerHTML = `
+        ${certificateHTML}
+
+        <h2>Quiz Completed!</h2>
+        <p>Student: ${escapeHTML(name)}</p>
+        <p>Difficulty: ${selectedDifficulty}</p>
+
+        <h3>Score: ${score}/${questions.length}</h3>
+        <h3>Percentage: ${percentage}%</h3>
+        <h3>Grade: ${grade}</h3>
+        <h3>Result: ${pass}</h3>
+        <h3>${performanceMessage}</h3>
+
+        <p>Correct: ${correctCount}</p>
+        <p>Wrong: ${wrongCount}</p>
+        <p>Unanswered: ${unansweredCount}</p>
+
+        <div class="summary-bar">
+            <div class="summary-correct"
+                style="width: ${(correctCount / questions.length) * 100}%">
+            </div>
+
+            <div class="summary-wrong"
+                style="width: ${(wrongCount / questions.length) * 100}%">
+            </div>
+
+            <div class="summary-unanswered"
+                style="width: ${(unansweredCount / questions.length) * 100}%">
+            </div>
+        </div>
+
+        <div class="summary-labels">
+            <span class="label-correct">
+                Correct: ${Math.round((correctCount / questions.length) * 100)}%
+            </span>
+
+            <span class="label-wrong">
+                Wrong: ${Math.round((wrongCount / questions.length) * 100)}%
+            </span>
+
+            <span class="label-unanswered">
+                Unanswered: ${Math.round((unansweredCount / questions.length) * 100)}%
+            </span>
+        </div>
+
+        <p id="best-score"></p>
+
+        ${reviewHTML}
+
+        <button onclick="restartQuiz()">Restart Quiz</button>
+        <button onclick="resetBestScore()">Reset Best Score</button>
+    `;
+
+    showBestScore(name);
+}
+
+/* PROTECT HTML OUTPUT */
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+/* SAVE BEST SCORE */
+
+/**
+ * @param {string} name
+ * @param {number} percentage
+ */
+function saveBestScore(name, percentage) {
+    const key = "abelBest_" + name.toLowerCase();
+
+    const oldScore = Number(
+        localStorage.getItem(key) || 0
+    );
+
+    if (percentage > oldScore) {
+        localStorage.setItem(key, percentage);
+    }
+}
+
+/* SHOW BEST SCORE */
+
+/** @param {string} name */
+function showBestScore(name) {
+    const key = "abelBest_" + name.toLowerCase();
+
+    const best = localStorage.getItem(key);
+
+    const bestScoreElement =
+        document.getElementById("best-score");
+
+    if (bestScoreElement) {
+        bestScoreElement.textContent =
+            "Your Best Score: " + (best || 0) + "%";
+    }
+}
+
+/* RESET BEST SCORE */
+
+function resetBestScore() {
+    const name =
+        document.getElementById("studentName").value.trim();
+
+    if (!name) {
+        alert("Student name is required.");
+        return;
+    }
+
+    if (confirm("Are you sure you want to reset your best score?")) {
+        localStorage.removeItem(
+            "abelBest_" + name.toLowerCase()
+        );
+
+        showBestScore(name);
+    }
+}
+
+/* RESTART QUIZ */
+
+function restartQuiz() {
+    clearInterval(timer);
+
+    document.getElementById("final-result")
+        .classList.add("hidden");
+
+    document.getElementById("quiz-area")
+        .classList.add("hidden");
+
+    document.getElementById("startButton")
+        .classList.remove("hidden");
+
+    document.getElementById("student-area")
+        .classList.remove("hidden");
+
+    document.querySelector(".difficulty-buttons")
+        .classList.remove("hidden");
+
+    document.getElementById("difficulty-message")
+        .classList.remove("hidden");
+
+    document.getElementById("result").textContent = "";
+
+    document.getElementById("progress-bar")
+        .style.width = "0%";
+
+    document.getElementById("studentName").value = "";
+}
+
+/* DARK MODE / LIGHT MODE */
+
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+
+    const isDark =
+        document.body.classList.contains("dark-mode");
+
+    const button = document.getElementById("themeButton");
+
+    if (isDark) {
+        button.textContent = "☀️ Light Mode";
+        localStorage.setItem("abelTheme", "dark");
+    } else {
+        button.textContent = "🌙 Dark Mode";
+        localStorage.setItem("abelTheme", "light");
+    }
+}
+
+/* LOAD SAVED THEME */
+
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem("abelTheme");
+    const button = document.getElementById("themeButton");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+        button.textContent = "☀️ Light Mode";
+    } else {
+        document.body.classList.remove("dark-mode");
+        button.textContent = "🌙 Dark Mode";
+    }
+}
+
+/* CONNECT FUNCTIONS TO HTML BUTTONS */
+
+window.restartQuiz = restartQuiz;
+window.resetBestScore = resetBestScore;
+window.toggleTheme = toggleTheme;
+window.startQuiz = startQuiz;
+window.nextQuestion = nextQuestion;
+window.selectDifficulty = selectDifficulty;
+
+/* LOAD THEME */
+
+loadSavedTheme();
+
+</script>
+</body>
+</html>
